@@ -55,7 +55,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'search_app', 'templates')],
+        'DIRS': [BASE_DIR / 'search_app' / 'templates'],
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
