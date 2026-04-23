@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 
 load_dotenv()
 
@@ -28,12 +28,11 @@ Create a professional report from these summaries:
 """
         }
 
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
-            google_api_key=os.getenv("GEMINI_API_KEY"),
+        self.llm = ChatGroq(
+            model="llama-3.3-70b-versatile",
+            groq_api_key=os.getenv("api_groc"),
             temperature=0.3,
-            timeout=30,
-            max_retries=3   
+            max_retries=2
         )
 
     def get_prompt(self, key, **kwargs):
