@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>IntelSearch Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen">
+
+    <div class="max-w-4xl mx-auto p-6 flex flex-col h-screen">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-blue-500">IntelSearch AI</h1>
+            <span class="px-3 py-1 bg-green-900/30 text-green-400 text-xs rounded-full border border-green-800">Serveur Actif</span>
+        </div>
+
+        <div id="report-container" class="flex-grow overflow-y-auto bg-[#161b22] rounded-2xl p-6 border border-gray-800 shadow-2xl mb-6">
+            <div id="placeholder" class="h-full flex flex-col items-center justify-center text-gray-600 italic">
+                <i class="fas fa-terminal text-4xl mb-4"></i>
+                En attente d'une requête...
+            </div>
+            <div id="output" class="prose prose-invert max-w-none prose-blue"></div>
+        </div>
+
+        <div class="relative group">
+            <input type="text" id="userInput" 
+                class="w-full bg-[#161b22] border border-gray-700 rounded-xl py-4 px-6 pr-16 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                placeholder="Entrez votre sujet de recherche...">
+            <button onclick="submitQuery()" class="absolute right-3 top-2.5 p-2 text-blue-500 hover:scale-110 transition">
+                <i class="fas fa-paper-plane text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function submitQuery() {
+            const query = document.getElementById('userInput').value;
+            const output = document.getElementById('output');
+            const placeholder = document.getElementById('placeholder');
+            
+            if (!query) return;
+
+            // UI Loading
+            placeholder.style.display = 'none';
+            output.innerHTML = `<div class="animate-pulse text-blue-400"><i class="fas fa-sync-alt animate-spin mr-2"></i> L'agent recherche et analyse les sources via Groq...</div>`;
+
+            // Appel à la vue Django (qui fera le pont vers FastAPI)
+            const formData = new FormData();
+            formData.append('query', query);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            try {
+                const response = await fetch("{% url 'process' %}", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.report) {
+                    output.innerHTML = `
+                        <div class="flex justify-end gap-2 mb-4 border-b border-gray-800 pb-2">
+                            <button onclick="downloadMd('${query}')" class="text-xs bg-gray-800 px-2 py-1 rounded hover:bg-gray-700">.MD</button>
+                        </div>
+                        ${marked.parse(data.report)}
+                    `;
+                } else {
+                    output.innerHTML = `<div class="text-red-400 italic">Erreur: ${data.error}</div>`;
+                }
+            } catch (err) {
+                output.innerHTML = `<div class="text-red-400 italic">Erreur de connexion : ${err}</div>`;
+            }
+        }
+
+        function downloadMd(name) {
+            const content = document.getElementById('output').innerText;
+            const blob = new Blob([content], {type: 'text/markdown'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `rapport_${name.replace(/\s+/g, '_')}.md`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
