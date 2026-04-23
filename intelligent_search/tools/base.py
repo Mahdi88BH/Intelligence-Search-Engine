@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 
-class BaseAgent(ABC):
+class BaseTool(ABC):
 
     @abstractmethod
-    def run(self, state: dict) -> dict:
+    def run(self, *args, **kwargs):
         pass

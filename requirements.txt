@@ -3,3 +3,5 @@ langgraph
 langchain-google-genai
 langchain-core
 dotenv
+bs4
+ddgs

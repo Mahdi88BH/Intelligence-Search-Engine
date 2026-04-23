@@ -1,11 +1,10 @@
-from typing import TypedDict, List, Optional
+from typing import TypedDict, List, Dict
 
-class QueryOptimization(TypedDict):
+
+class GraphState(TypedDict):
     user_query: str
-    # enhanced_queries: List[str]
-    enhanced_queries: str
-
-
-class ResearchState(TypedDict):
-    user_query: str
-    queries_optimization: Optional[QueryOptimization]
+    enhanced_queries: List[str]
+    urls: Dict[str, List[str]]
+    contents: Dict[str, List[str]]
+    summaries: Dict[str, List[str]]
+    final_report: str
