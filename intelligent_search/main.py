@@ -8,6 +8,7 @@ def main():
 
     result = app.invoke({
         "user_query": query
+
     })
 
     print("\n===== FINAL REPORT =====\n")
