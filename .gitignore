@@ -1,4 +1,26 @@
-.git
+# --- Environnement & Sécurité ---
 .env
-__pycache__
-.vscode
+venv/
+venv_front/
+venv_django/
+*.pyc
+__pycache__/
+
+# --- VS Code & Editeurs ---
+.vscode/
+.idea/
+*.swp
+
+# --- Django spécifique ---
+db.sqlite3
+/static/
+/media/
+staticfiles/
+
+# --- Logs & OS ---
+*.log
+.DS_Store
+Thumbs.db
+
+# --- Git ---
+.git
