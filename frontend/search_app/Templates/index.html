@@ -31,13 +31,16 @@
         .prose-premium h2 { color: #f1f5f9; font-size: 1.35rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; }
         .prose-premium p { color: #cbd5e1; line-height: 1.8; margin-bottom: 1.25rem; }
         .prose-premium strong { color: #3b82f6; font-weight: 600; }
-        .prose-premium ul { margin: 1.25rem 0; space-y: 0.75rem; }
-        .prose-premium li { color: #cbd5e1; margin-bottom: 0.5rem; position: relative; padding-left: 1.5rem; }
-        .prose-premium li::before { content: "→"; position: absolute; left: 0; color: #3b82f6; opacity: 0.7; }
+        .prose-premium ul { margin: 1.25rem 0; list-style: disc; padding-left: 1.5rem; }
+        .prose-premium li { color: #cbd5e1; margin-bottom: 0.5rem; }
 
         /* Actions Bar Styling */
         .action-pill { @apply flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all duration-200 cursor-pointer; }
         .copy-confirm { color: #10b981 !important; border-color: #10b981 !important; }
+
+        /* ChatGPT Style Typing Dot Animation */
+        .typing-dot { animation: typing 1.4s infinite; }
+        @keyframes typing { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
     </style>
 </head>
 <body class="text-slate-200 h-screen flex overflow-hidden">
@@ -51,7 +54,7 @@
         </div>
 
         <div class="flex-grow overflow-y-auto px-3 space-y-1 py-2">
-            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-4">Historique de recherche</h4>
+            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-4">Historique</h4>
             <div id="history-list" class="space-y-1">
                 {% for item in history %}
                 <button onclick="loadHistory('{{ item.id }}')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 group flex items-center gap-3 transition-all">
@@ -60,8 +63,7 @@
                 </button>
                 {% empty %}
                 <div class="px-3 py-10 text-center">
-                    <i class="fas fa-history text-slate-700 text-2xl mb-2"></i>
-                    <p class="text-[10px] text-slate-600 italic">Aucune archive archivée</p>
+                    <p class="text-[10px] text-slate-600 italic">Aucune archive</p>
                 </div>
                 {% endfor %}
             </div>
@@ -72,12 +74,12 @@
                 <div class="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white shadow-inner">
                     {{ user.username|first|upper }}
                 </div>
-                <div class="flex flex-col">
-                    <span class="text-sm font-bold text-slate-200">{{ user.username }}</span>
-                    <span class="text-[10px] text-slate-500 font-medium italic">Professional Plan</span>
+                <div class="flex flex-col text-xs">
+                    <span class="font-bold text-slate-200">{{ user.username }}</span>
+                    <span class="text-slate-500 italic">Pro User</span>
                 </div>
             </div>
-            <a href="{% url 'logout' %}" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors">
+            <a href="{% url 'logout' %}" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold text-red-400 hover:bg-red-500/10 transition-colors">
                 <i class="fas fa-power-off"></i> Déconnexion
             </a>
         </div>
@@ -89,58 +91,36 @@
                 <button onclick="toggleSidebar()" class="md:hidden p-2 text-slate-400"><i class="fas fa-bars"></i></button>
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
-                    <h1 class="text-lg font-black tracking-tighter text-white">INTELSEARCH<span class="text-blue-500">.AI</span></h1>
+                    <h1 class="text-lg font-black tracking-tighter text-white uppercase italic">IntelSearch</h1>
                 </div>
             </div>
-            <div class="flex items-center gap-6">
-                <div class="hidden sm:flex items-center gap-2">
-                    <div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Engine Active</span>
-                </div>
-                <div class="h-8 w-[1px] bg-slate-800"></div>
-                <button class="text-slate-400 hover:text-white transition-colors text-sm"><i class="far fa-question-circle"></i></button>
+            <div class="hidden sm:flex items-center gap-2">
+                <div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Groq LPU Engine Active</span>
             </div>
         </header>
 
         <div id="chat-viewport" class="flex-grow overflow-y-auto scroll-smooth">
-            <div id="placeholder" class="h-full flex flex-col items-center justify-center p-8">
-                <div class="w-24 h-24 bg-slate-900 rounded-[2.5rem] flex items-center justify-center mb-6 shadow-2xl border border-slate-800 rotate-12">
-                    <i class="fas fa-bolt text-4xl text-blue-500 -rotate-12"></i>
+            <div id="placeholder" class="h-full flex flex-col items-center justify-center p-8 opacity-40">
+                <div class="w-20 h-20 bg-slate-900 rounded-[2rem] flex items-center justify-center mb-6 border border-slate-800 rotate-6 shadow-2xl">
+                    <i class="fas fa-bolt text-3xl text-blue-500 -rotate-6"></i>
                 </div>
-                <h2 class="text-2xl font-black text-white mb-2">Prêt pour une analyse ?</h2>
-                <p class="text-slate-500 text-sm max-w-sm text-center font-medium">Posez votre question. L'IA générera un rapport d'intelligence structuré en quelques secondes.</p>
+                <h2 class="text-xl font-black text-white">Analyseur d'Intelligence</h2>
             </div>
 
             <div id="output" class="max-w-4xl mx-auto px-4 py-12 space-y-12"></div>
         </div>
 
         <div class="p-6 bg-gradient-to-t from-[#0b0e14] via-[#0b0e14] to-transparent">
-            <div class="max-w-3xl mx-auto relative">
-                <div class="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/80 backdrop-blur py-1.5 px-4 rounded-full border border-slate-800 shadow-xl opacity-0 transition-opacity" id="typing-indicator">
-                    <span class="flex gap-1">
-                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></span>
-                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                    </span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">IA en réflexion</span>
-                </div>
-
-                <div class="relative group">
-                    <div class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <input type="text" id="userInput" 
-                        class="w-full bg-[#161b22] border border-slate-700 rounded-2xl py-5 pl-14 pr-20 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-2xl text-slate-100 placeholder-slate-600"
-                        placeholder="Qu'allons-nous analyser aujourd'hui ?"
-                        onkeypress="if(event.key === 'Enter') submitQuery()">
-                    
-                    <button onclick="submitQuery()" class="absolute right-3 top-3 bottom-3 px-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center group">
-                        <i class="fas fa-paper-plane text-sm group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
-                    </button>
-                </div>
-                <p class="text-[10px] text-slate-600 mt-4 text-center font-medium tracking-tight">
-                    Optimisé par LangGraph & Groq LPU Engine • Rapports générés en temps réel.
-                </p>
+            <div class="max-w-3xl mx-auto relative group">
+                <input type="text" id="userInput" 
+                    class="w-full bg-[#161b22] border border-slate-700 rounded-2xl py-5 pl-6 pr-16 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-2xl text-slate-100 placeholder-slate-600 text-sm"
+                    placeholder="Qu'allons-nous analyser aujourd'hui ?"
+                    onkeypress="if(event.key === 'Enter') submitQuery()">
+                
+                <button onclick="submitQuery()" class="absolute right-3 top-3 bottom-3 px-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center group">
+                    <i class="fas fa-paper-plane text-sm transition-transform"></i>
+                </button>
             </div>
         </div>
     </main>
@@ -148,39 +128,27 @@
     <script>
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('hidden'); }
 
-        // --- RENDERER PRO ---
+        // --- RENDERER CHATGPT-STYLE ---
         function createReportCard(query, report, date = "Généré à l'instant", id) {
             const wrapperId = id || 'rep-' + Date.now();
             return `
-                <div id="${wrapperId}" class="fade-in group">
-                    <div class="flex justify-end mb-10">
-                        <div class="bg-indigo-600/10 border border-indigo-500/30 text-indigo-100 px-6 py-4 rounded-[2rem] rounded-tr-none max-w-[80%] shadow-xl">
-                            <p class="text-sm font-semibold">${query}</p>
+                <div id="${wrapperId}" class="fade-in group space-y-8">
+                    <div class="flex justify-end">
+                        <div class="bg-blue-600/10 border border-blue-500/30 text-blue-100 px-6 py-3 rounded-2xl rounded-tr-none max-w-[80%] text-sm font-medium">
+                            ${query}
                         </div>
                     </div>
 
-                    <div class="bg-[#161b22] border border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden relative">
-                        <div class="flex justify-between items-center px-8 py-5 border-b border-slate-800 bg-slate-900/30">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 bg-blue-600/20 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-file-contract text-blue-500 text-xs"></i>
-                                </div>
-                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">${date}</span>
-                            </div>
+                    <div class="bg-[#161b22] border border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+                        <div class="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-900/30">
+                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">${date}</span>
                             <div class="flex items-center gap-2">
-                                <button onclick="copyContent(this, '${wrapperId}-content')" class="action-pill" title="Copier le rapport">
-                                    <i class="far fa-copy text-xs"></i>
-                                </button>
-                                <button onclick="exportToPDF('${wrapperId}')" class="action-pill" title="Exporter en PDF">
-                                    <i class="far fa-file-pdf text-xs"></i>
-                                </button>
-                                <button onclick="downloadMd('${query}', '${wrapperId}-content')" class="action-pill" title="Télécharger Markdown">
-                                    <i class="fab fa-markdown text-xs"></i>
-                                </button>
+                                <button onclick="copyContent(this, '${wrapperId}-content')" class="action-pill"><i class="far fa-copy text-xs"></i></button>
+                                <button onclick="exportToPDF('${wrapperId}-content')" class="action-pill"><i class="far fa-file-pdf text-xs"></i></button>
+                                <button onclick="downloadMd('${query}', '${wrapperId}-content')" class="action-pill"><i class="fab fa-markdown text-xs"></i></button>
                             </div>
                         </div>
-
-                        <div id="${wrapperId}-content" class="p-8 md:p-12 prose-premium max-w-none report-area">
+                        <div id="${wrapperId}-content" class="p-8 md:p-10 prose-premium max-w-none">
                             ${marked.parse(report)}
                         </div>
                     </div>
@@ -188,7 +156,70 @@
             `;
         }
 
+        function showLoadingState(query) {
+            const output = document.getElementById('output');
+            const loaderId = 'loading-' + Date.now();
+            
+            output.innerHTML += `
+                <div id="${loaderId}" class="fade-in space-y-8 mb-10">
+                    <div class="flex justify-end">
+                        <div class="bg-blue-600/10 border border-blue-500/30 text-blue-100 px-6 py-3 rounded-2xl rounded-tr-none max-w-[80%] text-sm font-medium">
+                            ${query}
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <div class="bg-[#161b22] p-5 rounded-2xl border border-slate-800 flex items-center gap-3">
+                            <span class="typing-dot w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span class="typing-dot w-2 h-2 bg-blue-500 rounded-full [animation-delay:0.2s]"></span>
+                            <span class="typing-dot w-2 h-2 bg-blue-500 rounded-full [animation-delay:0.4s]"></span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-2">Analyse en cours...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return loaderId;
+        }
+
         // --- CORE ACTIONS ---
+        async function submitQuery() {
+            const input = document.getElementById('userInput');
+            const query = input.value.trim();
+            if (!query) return;
+
+            document.getElementById('placeholder').style.display = 'none';
+            const output = document.getElementById('output');
+            const viewport = document.getElementById('chat-viewport');
+            
+            // 1. Afficher la question + le loader ChatGPT style
+            const loaderId = showLoadingState(query);
+            input.value = '';
+            viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+
+            const formData = new FormData();
+            formData.append('query', query);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            try {
+                const response = await fetch("{% url 'process' %}", { method: "POST", body: formData });
+                const data = await response.json();
+                
+                // 2. Remplacer le loader par le rapport final
+                document.getElementById(loaderId).remove();
+                
+                if (data.report) {
+                    output.innerHTML += createReportCard(query, data.report);
+                    addToHistorySidebar(data.id, query);
+                    viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+                }
+            } catch (err) {
+                document.getElementById(loaderId).innerHTML = `<div class="p-4 text-red-400 bg-red-900/20 rounded-xl text-xs">Erreur de communication.</div>`;
+            }
+        }
+
+        // Les autres fonctions (loadHistory, copyContent, exportToPDF, downloadMd, addToHistorySidebar) restent identiques à la version précédente
         function copyContent(btn, contentId) {
             const text = document.getElementById(contentId).innerText;
             navigator.clipboard.writeText(text).then(() => {
@@ -202,68 +233,33 @@
             });
         }
 
-        function exportToPDF(id) {
-            const element = document.getElementById(id + '-content');
+        function exportToPDF(contentId) {
+            const element = document.getElementById(contentId);
             const opt = {
                 margin: 15,
-                filename: `Intelligence_Report_${Date.now()}.pdf`,
+                filename: `Report_IntelSearch_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, backgroundColor: '#0b0e14', useCORS: true },
+                html2canvas: { scale: 2, backgroundColor: '#0b0e14' },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             html2pdf().set(opt).from(element).save();
         }
 
-        async function submitQuery() {
-            const input = document.getElementById('userInput');
-            const query = input.value.trim();
-            if (!query) return;
-
-            document.getElementById('placeholder').style.display = 'none';
-            document.getElementById('typing-indicator').classList.remove('opacity-0');
-            const output = document.getElementById('output');
-            const viewport = document.getElementById('chat-viewport');
-            
-            input.value = '';
-
-            const formData = new FormData();
-            formData.append('query', query);
-            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
-            try {
-                const response = await fetch("{% url 'process' %}", { method: "POST", body: formData });
-                const data = await response.json();
-                document.getElementById('typing-indicator').classList.add('opacity-0');
-                
-                if (data.report) {
-                    output.innerHTML = createReportCard(query, data.report); // Seul le dernier rapport est affiché
-                    addToHistorySidebar(data.id, query);
-                    viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-                }
-            } catch (err) {
-                document.getElementById('typing-indicator').classList.add('opacity-0');
-                alert("Erreur de communication avec le serveur.");
-            }
-        }
-
         async function loadHistory(id) {
             const output = document.getElementById('output');
             document.getElementById('placeholder').style.display = 'none';
-            output.innerHTML = `<div class="p-20 text-center"><i class="fas fa-circle-notch fa-spin text-3xl text-blue-500"></i></div>`;
-
-            try {
-                const response = await fetch(`/history/${id}/`);
-                const data = await response.json();
-                output.innerHTML = createReportCard(data.query, data.report, "Rapport archivé • " + data.date);
-                document.getElementById('chat-viewport').scrollTop = 0;
-            } catch (e) { alert("Erreur de chargement."); }
+            output.innerHTML = `<div class="p-20 text-center"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500"></i></div>`;
+            const response = await fetch(`/history/${id}/`);
+            const data = await response.json();
+            output.innerHTML = createReportCard(data.query, data.report, "Archive • " + data.date, 'hist-' + id);
+            document.getElementById('chat-viewport').scrollTop = 0;
         }
 
         function addToHistorySidebar(id, query) {
             const list = document.getElementById('history-list');
             const btn = document.createElement('button');
             btn.onclick = () => loadHistory(id);
-            btn.className = "w-full text-left p-3 rounded-xl hover:bg-slate-800 group flex items-center gap-3 transition-all fade-in";
+            btn.className = "w-full text-left p-3 rounded-xl hover:bg-slate-800 group flex items-center gap-3 transition-all";
             btn.innerHTML = `<i class="far fa-comment-dots text-slate-500 group-hover:text-blue-400"></i><span class="text-xs font-medium text-slate-400 group-hover:text-slate-200 truncate">${query}</span>`;
             list.prepend(btn);
             const empty = list.querySelector('.px-3.py-10'); if(empty) empty.remove();
