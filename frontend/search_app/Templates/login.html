@@ -6,10 +6,47 @@
     <title>IntelSearch AI | Connexion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen flex items-center justify-center p-6">
+    <style>
+        /* Animation d'entrée : Slide + Fade + Blur */
+        .page-entrance {
+            animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
 
-    <div class="w-full max-w-md fade-in">
+        @keyframes slideUpFade {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+                filter: blur(10px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+                filter: blur(0); 
+            }
+        }
+
+        /* Animation de sortie : Recul + Fade */
+        .page-exit {
+            animation: fadeOut 0.4s ease-in forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); filter: blur(5px); }
+        }
+
+        /* Effet de lueur sur les inputs au focus */
+        input:focus {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.5) !important;
+        }
+    </style>
+</head>
+<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen flex items-center justify-center p-6 overflow-hidden">
+
+    <div id="main-container" class="w-full max-w-md page-entrance">
+        
         <div class="text-center mb-10">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600/10 rounded-2xl mb-4 border border-blue-500/20">
                 <i class="fas fa-brain text-blue-500 text-3xl"></i>
@@ -23,29 +60,29 @@
                 {% csrf_token %}
                 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Utilisateur</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-4 flex items-center text-gray-500">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 ml-1">Utilisateur</label>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-4 flex items-center text-gray-500 group-focus-within:text-blue-500 transition-colors">
                             <i class="fas fa-user text-xs"></i>
                         </span>
                         <input type="text" name="username" required
-                            class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-blue-500/50 outline-none transition text-sm">
+                            class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 outline-none transition-all text-sm text-white">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Mot de passe</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-4 flex items-center text-gray-500">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 ml-1">Mot de passe</label>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-4 flex items-center text-gray-500 group-focus-within:text-blue-500 transition-colors">
                             <i class="fas fa-lock text-xs"></i>
                         </span>
                         <input type="password" name="password" required
-                            class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-blue-500/50 outline-none transition text-sm">
+                            class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 outline-none transition-all text-sm text-white">
                     </div>
                 </div>
 
                 <button type="submit" 
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-900/20">
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-blue-900/20 mt-2">
                     Se connecter
                 </button>
             </form>
@@ -53,13 +90,30 @@
 
         <p class="text-center mt-8 text-sm text-gray-500">
             Nouveau ici ? 
-            <a href="{% url 'register' %}" class="text-blue-400 hover:underline font-medium">Créer un compte</a>
+            <a href="{% url 'register' %}" 
+               onclick="transitionToPage(event, '{% url 'register' %}')"
+               class="text-blue-400 hover:text-blue-300 font-medium transition-colors cursor-pointer">
+               Créer un compte
+            </a>
         </p>
     </div>
 
-    <style>
-        .fade-in { animation: fadeIn 0.8s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    <script>
+        /**
+         * Gère la transition fluide entre les pages de login/register
+         */
+        function transitionToPage(e, url) {
+            e.preventDefault();
+            const container = document.getElementById('main-container');
+            
+            // On ajoute la classe de sortie
+            container.classList.add('page-exit');
+            
+            // On attend la fin de l'animation CSS avant de rediriger
+            setTimeout(() => {
+                window.location.href = url;
+            }, 380);
+        }
+    </script>
 </body>
 </html>
