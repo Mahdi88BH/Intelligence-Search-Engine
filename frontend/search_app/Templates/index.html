@@ -23,15 +23,15 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Code & Markdown Styles */
-        pre { background: #010409 !important; border: 1px solid #30363d !important; padding: 1.25rem !important; border-radius: 12px !important; margin: 1.5rem 0 !important; position: relative; }
+        pre { background: #010409 !important; border: 1px solid #30363d !important; padding: 1.25rem !important; border-radius: 12px !important; margin: 1.5rem 0 !important; }
         code { font-family: 'Fira Code', monospace !important; font-size: 0.85em !important; color: #e6edf3 !important; }
         
         /* Premium Prose Tuning */
-        .prose-premium h1 { color: #f8fafc; font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.02em; border-left: 4px solid #3b82f6; padding-left: 1rem; }
+        .prose-premium h1 { color: #f8fafc; font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem; border-left: 4px solid #3b82f6; padding-left: 1rem; }
         .prose-premium h2 { color: #f1f5f9; font-size: 1.35rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; }
         .prose-premium p { color: #cbd5e1; line-height: 1.8; margin-bottom: 1.25rem; }
         .prose-premium strong { color: #3b82f6; font-weight: 600; }
-        .prose-premium ul { margin: 1.25rem 0; list-style: disc; padding-left: 1.5rem; }
+        .prose-premium ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
         .prose-premium li { color: #cbd5e1; margin-bottom: 0.5rem; }
 
         /* Actions Bar Styling */
@@ -49,21 +49,26 @@
         <div class="p-4">
             <button onclick="window.location.reload()" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 px-4 font-semibold shadow-lg shadow-blue-900/20 transition-all active:scale-[0.98]">
                 <i class="fas fa-plus text-xs"></i>
-                <span class="text-sm">Nouvelle Analyse</span>
+                <span class="text-sm">Nouvelle Recherche</span>
             </button>
         </div>
 
         <div class="flex-grow overflow-y-auto px-3 space-y-1 py-2">
-            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-4">Historique</h4>
+            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-4">Historique de recherche</h4>
             <div id="history-list" class="space-y-1">
                 {% for item in history %}
-                <button onclick="loadHistory('{{ item.id }}')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 group flex items-center gap-3 transition-all">
-                    <i class="far fa-comment-dots text-slate-500 group-hover:text-blue-400"></i>
-                    <span class="text-xs font-medium text-slate-400 group-hover:text-slate-200 truncate">{{ item.query }}</span>
-                </button>
+                <div id="history-item-{{ item.id }}" class="group relative">
+                    <button onclick="loadHistory('{{ item.id }}')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 flex items-center gap-3 transition-all pr-10">
+                        <i class="far fa-comment-dots text-slate-500 group-hover:text-blue-400"></i>
+                        <span class="text-xs font-medium text-slate-400 group-hover:text-slate-200 truncate">{{ item.query }}</span>
+                    </button>
+                    <button onclick="deleteHistory(event, '{{ item.id }}')" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all" title="Supprimer">
+                        <i class="fas fa-trash-alt text-[10px]"></i>
+                    </button>
+                </div>
                 {% empty %}
                 <div class="px-3 py-10 text-center">
-                    <p class="text-[10px] text-slate-600 italic">Aucune archive</p>
+                    <p class="text-[10px] text-slate-600 italic">Aucune archive disponible</p>
                 </div>
                 {% endfor %}
             </div>
@@ -76,11 +81,11 @@
                 </div>
                 <div class="flex flex-col text-xs">
                     <span class="font-bold text-slate-200">{{ user.username }}</span>
-                    <span class="text-slate-500 italic">Pro User</span>
+                    <span class="text-slate-500 italic">Professional Plan</span>
                 </div>
             </div>
-            <a href="{% url 'logout' %}" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold text-red-400 hover:bg-red-500/10 transition-colors">
-                <i class="fas fa-power-off"></i> Déconnexion
+            <a href="{% url 'logout' %}" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold text-red-400 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/40 transition-all">
+                <i class="fas fa-sign-out-alt"></i> <span>Déconnexion</span>
             </a>
         </div>
     </aside>
@@ -91,23 +96,22 @@
                 <button onclick="toggleSidebar()" class="md:hidden p-2 text-slate-400"><i class="fas fa-bars"></i></button>
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
-                    <h1 class="text-lg font-black tracking-tighter text-white uppercase italic">IntelSearch</h1>
+                    <h1 class="text-lg font-black tracking-tighter text-white uppercase italic">IntelSearch.AI</h1>
                 </div>
             </div>
-            <div class="hidden sm:flex items-center gap-2">
+            <div class="flex items-center gap-2">
                 <div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Groq LPU Engine Active</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Engine Live</span>
             </div>
         </header>
 
         <div id="chat-viewport" class="flex-grow overflow-y-auto scroll-smooth">
             <div id="placeholder" class="h-full flex flex-col items-center justify-center p-8 opacity-40">
                 <div class="w-20 h-20 bg-slate-900 rounded-[2rem] flex items-center justify-center mb-6 border border-slate-800 rotate-6 shadow-2xl">
-                    <i class="fas fa-bolt text-3xl text-blue-500 -rotate-6"></i>
+                    <i class="fas fa-brain text-3xl text-blue-500 -rotate-6"></i>
                 </div>
-                <h2 class="text-xl font-black text-white">Analyseur d'Intelligence</h2>
+                <h2 class="text-xl font-black text-white">Comment puis-je vous aider ?</h2>
             </div>
-
             <div id="output" class="max-w-4xl mx-auto px-4 py-12 space-y-12"></div>
         </div>
 
@@ -115,11 +119,10 @@
             <div class="max-w-3xl mx-auto relative group">
                 <input type="text" id="userInput" 
                     class="w-full bg-[#161b22] border border-slate-700 rounded-2xl py-5 pl-6 pr-16 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-2xl text-slate-100 placeholder-slate-600 text-sm"
-                    placeholder="Qu'allons-nous analyser aujourd'hui ?"
+                    placeholder="Entrez votre sujet de recherche..."
                     onkeypress="if(event.key === 'Enter') submitQuery()">
-                
-                <button onclick="submitQuery()" class="absolute right-3 top-3 bottom-3 px-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center group">
-                    <i class="fas fa-paper-plane text-sm transition-transform"></i>
+                <button onclick="submitQuery()" class="absolute right-3 top-3 bottom-3 px-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center">
+                    <i class="fas fa-paper-plane text-sm"></i>
                 </button>
             </div>
         </div>
@@ -128,24 +131,23 @@
     <script>
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('hidden'); }
 
-        // --- RENDERER CHATGPT-STYLE ---
-        function createReportCard(query, report, date = "Généré à l'instant", id) {
+        // --- UI RENDERER ---
+        function createReportCard(query, report, date = "À l'instant", id) {
             const wrapperId = id || 'rep-' + Date.now();
             return `
-                <div id="${wrapperId}" class="fade-in group space-y-8">
+                <div id="${wrapperId}" class="fade-in space-y-8">
                     <div class="flex justify-end">
-                        <div class="bg-blue-600/10 border border-blue-500/30 text-blue-100 px-6 py-3 rounded-2xl rounded-tr-none max-w-[80%] text-sm font-medium">
+                        <div class="bg-blue-600/10 border border-blue-500/30 text-blue-100 px-6 py-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm font-medium shadow-lg">
                             ${query}
                         </div>
                     </div>
-
                     <div class="bg-[#161b22] border border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
                         <div class="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-900/30">
                             <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">${date}</span>
                             <div class="flex items-center gap-2">
-                                <button onclick="copyContent(this, '${wrapperId}-content')" class="action-pill"><i class="far fa-copy text-xs"></i></button>
-                                <button onclick="exportToPDF('${wrapperId}-content')" class="action-pill"><i class="far fa-file-pdf text-xs"></i></button>
-                                <button onclick="downloadMd('${query}', '${wrapperId}-content')" class="action-pill"><i class="fab fa-markdown text-xs"></i></button>
+                                <button onclick="copyContent(this, '${wrapperId}-content')" class="action-pill" title="Copier"><i class="far fa-copy text-xs"></i></button>
+                                <button onclick="exportToPDF('${wrapperId}-content')" class="action-pill" title="PDF"><i class="far fa-file-pdf text-xs"></i></button>
+                                <button onclick="downloadMd('${query}', '${wrapperId}-content')" class="action-pill" title="Markdown"><i class="fab fa-markdown text-xs"></i></button>
                             </div>
                         </div>
                         <div id="${wrapperId}-content" class="p-8 md:p-10 prose-premium max-w-none">
@@ -156,26 +158,18 @@
             `;
         }
 
-        function showLoadingState(query) {
+        function showLoading(query) {
             const output = document.getElementById('output');
             const loaderId = 'loading-' + Date.now();
-            
             output.innerHTML += `
                 <div id="${loaderId}" class="fade-in space-y-8 mb-10">
-                    <div class="flex justify-end">
-                        <div class="bg-blue-600/10 border border-blue-500/30 text-blue-100 px-6 py-3 rounded-2xl rounded-tr-none max-w-[80%] text-sm font-medium">
-                            ${query}
-                        </div>
-                    </div>
+                    <div class="flex justify-end"><div class="bg-blue-600/10 border border-blue-500/30 text-blue-100 px-6 py-3 rounded-2xl max-w-[85%] text-sm font-medium">${query}</div></div>
                     <div class="flex items-start gap-4">
-                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-robot text-white text-xs"></i>
-                        </div>
+                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg"><i class="fas fa-robot text-white text-xs"></i></div>
                         <div class="bg-[#161b22] p-5 rounded-2xl border border-slate-800 flex items-center gap-3">
                             <span class="typing-dot w-2 h-2 bg-blue-500 rounded-full"></span>
                             <span class="typing-dot w-2 h-2 bg-blue-500 rounded-full [animation-delay:0.2s]"></span>
                             <span class="typing-dot w-2 h-2 bg-blue-500 rounded-full [animation-delay:0.4s]"></span>
-                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-2">Analyse en cours...</span>
                         </div>
                     </div>
                 </div>
@@ -183,7 +177,7 @@
             return loaderId;
         }
 
-        // --- CORE ACTIONS ---
+        // --- CORE LOGIC ---
         async function submitQuery() {
             const input = document.getElementById('userInput');
             const query = input.value.trim();
@@ -193,8 +187,7 @@
             const output = document.getElementById('output');
             const viewport = document.getElementById('chat-viewport');
             
-            // 1. Afficher la question + le loader ChatGPT style
-            const loaderId = showLoadingState(query);
+            const loaderId = showLoading(query);
             input.value = '';
             viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
 
@@ -205,44 +198,16 @@
             try {
                 const response = await fetch("{% url 'process' %}", { method: "POST", body: formData });
                 const data = await response.json();
-                
-                // 2. Remplacer le loader par le rapport final
                 document.getElementById(loaderId).remove();
                 
                 if (data.report) {
                     output.innerHTML += createReportCard(query, data.report);
-                    addToHistorySidebar(data.id, query);
+                    updateSidebarDynamically(data.id, query);
                     viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
                 }
             } catch (err) {
-                document.getElementById(loaderId).innerHTML = `<div class="p-4 text-red-400 bg-red-900/20 rounded-xl text-xs">Erreur de communication.</div>`;
+                document.getElementById(loaderId).innerHTML = `<div class="p-4 text-red-400 bg-red-900/20 rounded-xl text-xs">Erreur de connexion.</div>`;
             }
-        }
-
-        // Les autres fonctions (loadHistory, copyContent, exportToPDF, downloadMd, addToHistorySidebar) restent identiques à la version précédente
-        function copyContent(btn, contentId) {
-            const text = document.getElementById(contentId).innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                const icon = btn.querySelector('i');
-                btn.classList.add('copy-confirm');
-                icon.className = "fas fa-check";
-                setTimeout(() => {
-                    btn.classList.remove('copy-confirm');
-                    icon.className = "far fa-copy";
-                }, 2000);
-            });
-        }
-
-        function exportToPDF(contentId) {
-            const element = document.getElementById(contentId);
-            const opt = {
-                margin: 15,
-                filename: `Report_IntelSearch_${Date.now()}.pdf`,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, backgroundColor: '#0b0e14' },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
         }
 
         async function loadHistory(id) {
@@ -251,26 +216,66 @@
             output.innerHTML = `<div class="p-20 text-center"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500"></i></div>`;
             const response = await fetch(`/history/${id}/`);
             const data = await response.json();
-            output.innerHTML = createReportCard(data.query, data.report, "Archive • " + data.date, 'hist-' + id);
+            output.innerHTML = createReportCard(data.query, data.report, "Archive • " + data.date);
             document.getElementById('chat-viewport').scrollTop = 0;
         }
 
-        function addToHistorySidebar(id, query) {
+        async function deleteHistory(event, id) {
+            event.stopPropagation();
+            if(!confirm("Supprimer définitivement cet archive ?")) return;
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            try {
+                const response = await fetch(`/history/delete/${id}/`, { method: "POST", body: formData });
+                if(response.ok) {
+                    const el = document.getElementById(`history-item-${id}`);
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateX(-20px)';
+                    setTimeout(() => el.remove(), 300);
+                }
+            } catch (e) { alert("Erreur lors de la suppression."); }
+        }
+
+        function updateSidebarDynamically(id, query) {
             const list = document.getElementById('history-list');
-            const btn = document.createElement('button');
-            btn.onclick = () => loadHistory(id);
-            btn.className = "w-full text-left p-3 rounded-xl hover:bg-slate-800 group flex items-center gap-3 transition-all";
-            btn.innerHTML = `<i class="far fa-comment-dots text-slate-500 group-hover:text-blue-400"></i><span class="text-xs font-medium text-slate-400 group-hover:text-slate-200 truncate">${query}</span>`;
-            list.prepend(btn);
+            const div = document.createElement('div');
+            div.id = `history-item-${id}`;
+            div.className = "group relative fade-in";
+            div.innerHTML = `
+                <button onclick="loadHistory('${id}')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 flex items-center gap-3 transition-all pr-10">
+                    <i class="far fa-comment-dots text-slate-500"></i>
+                    <span class="text-xs font-medium text-slate-400 truncate">${query}</span>
+                </button>
+                <button onclick="deleteHistory(event, '${id}')" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                    <i class="fas fa-trash-alt text-[10px]"></i>
+                </button>
+            `;
+            list.prepend(div);
             const empty = list.querySelector('.px-3.py-10'); if(empty) empty.remove();
         }
 
+        // --- TOOLS ---
+        function copyContent(btn, contentId) {
+            const text = document.getElementById(contentId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = btn.querySelector('i');
+                btn.classList.add('copy-confirm');
+                icon.className = "fas fa-check";
+                setTimeout(() => { icon.className = "far fa-copy"; btn.classList.remove('copy-confirm'); }, 2000);
+            });
+        }
+
+        function exportToPDF(contentId) {
+            const element = document.getElementById(contentId);
+            const opt = { margin: 15, filename: 'Rapport_AI.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, backgroundColor: '#0b0e14' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save();
+        }
+
         function downloadMd(name, contentId) {
-            const content = document.getElementById(contentId).innerText;
-            const blob = new Blob([content], {type: 'text/markdown'});
+            const blob = new Blob([document.getElementById(contentId).innerText], {type: 'text/markdown'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `report_${name.substring(0,10).replace(/\s+/g, '_')}.md`;
+            a.download = `rapport_${name.substring(0,10)}.md`;
             a.click();
         }
     </script>
