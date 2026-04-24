@@ -6,6 +6,7 @@
     <title>IntelSearch AI | Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Custom Scrollbar */
@@ -17,14 +18,19 @@
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        pre { background: #0d1117; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; border: 1px solid #30363d; }
+        pre { background: #0d1117; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1.5rem 0; border: 1px solid #30363d; }
         code { color: #e5e7eb; font-family: 'Fira Code', monospace; font-size: 0.9em; }
         
-        /* Prose customization for Markdown */
-        .prose h1 { color: #60a5fa; font-size: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid #374151; padding-bottom: 0.5rem; }
-        .prose h2 { color: #93c5fd; font-size: 1.25rem; margin-top: 1.5rem; }
-        .prose p { margin-bottom: 1rem; line-height: 1.6; }
-        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+        /* Design Pro du Rapport */
+        .report-body { line-height: 1.8; color: #d1d5db; }
+        .report-body h1 { color: #60a5fa; font-size: 1.8rem; font-weight: 800; margin-top: 2rem; border-bottom: 1px solid #374151; padding-bottom: 0.5rem; }
+        .report-body h2 { color: #93c5fd; font-size: 1.4rem; font-weight: 700; margin-top: 1.5rem; }
+        .report-body p { margin-bottom: 1.2rem; }
+        .report-body ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1.2rem; }
+        .report-body li { margin-bottom: 0.5rem; }
+
+        .btn-action { @apply flex items-center gap-2 text-[11px] bg-gray-800/50 hover:bg-gray-700 px-3 py-2 rounded-lg border border-gray-700 transition-all; }
+        .copy-success { border-color: #10b981 !important; color: #10b981 !important; }
     </style>
 </head>
 <body class="bg-[#0b0e14] text-gray-200 font-sans h-screen flex overflow-hidden">
@@ -32,13 +38,13 @@
     <aside id="sidebar" class="w-64 bg-[#161b22] border-r border-gray-800 flex flex-col transition-all duration-300 hidden md:flex">
         <div class="p-4">
             <button onclick="window.location.reload()" class="w-full flex items-center justify-between border border-gray-700 rounded-lg p-3 hover:bg-gray-800 transition text-sm">
-                <span><i class="fas fa-plus mr-2"></i> Nouvelle recherche</span>
-                <i class="fas fa-edit text-gray-500 text-xs"></i>
+                <span><i class="fas fa-plus mr-2 text-blue-500"></i> Nouveau</span>
+                <i class="fas fa-search text-gray-600 text-xs"></i>
             </button>
         </div>
 
         <div class="flex-grow overflow-y-auto px-2 space-y-1">
-            <div class="text-[10px] uppercase font-bold text-gray-500 px-3 mt-4 mb-2">Historique</div>
+            <div class="text-[10px] uppercase font-bold text-gray-500 px-3 mt-4 mb-2 tracking-widest">Historique</div>
             <div id="history-list">
                 {% for item in history %}
                 <button onclick="loadHistory('{{ item.id }}')" 
@@ -47,14 +53,14 @@
                     <span class="truncate flex-grow">{{ item.query }}</span>
                 </button>
                 {% empty %}
-                <p class="text-[10px] text-gray-600 px-3 italic">Aucun historique disponible</p>
+                <p class="text-[10px] text-gray-600 px-3 italic">Aucune archive</p>
                 {% endfor %}
             </div>
         </div>
 
         <div class="p-4 border-t border-gray-800">
             <div class="flex items-center space-x-3 mb-4 px-2">
-                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-sm font-bold shadow-lg shadow-blue-900/20">
                     {{ user.username|first|upper }}
                 </div>
                 <span class="text-sm font-medium">{{ user.username }}</span>
@@ -66,191 +72,159 @@
     </aside>
 
     <main class="flex-grow flex flex-col relative h-full">
-        
         <header class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#0b0e14]/80 backdrop-blur-md sticky top-0 z-10">
             <div class="flex items-center space-x-4">
-                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
-                <h2 class="text-lg font-semibold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent italic tracking-tight">IntelSearch AI</h2>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-bars text-xl"></i></button>
+                <h2 class="text-lg font-black bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent italic tracking-tight">IntelSearch AI</h2>
             </div>
             <div class="flex items-center space-x-2">
-                <span id="status-dot" class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span class="text-[10px] uppercase tracking-widest text-gray-500">FastAPI Connecté</span>
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></span>
+                <span class="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Live Status</span>
             </div>
         </header>
 
-        <div id="chat-viewport" class="flex-grow overflow-y-auto p-4 md:p-8 scroll-smooth">
-            <div id="placeholder" class="h-full flex flex-col items-center justify-center space-y-6 max-w-2xl mx-auto opacity-40">
-                <div class="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
-                    <i class="fas fa-robot text-blue-500"></i>
+        <div id="chat-viewport" class="flex-grow overflow-y-auto p-4 md:p-10 scroll-smooth">
+            <div id="placeholder" class="h-full flex flex-col items-center justify-center space-y-6 max-w-2xl mx-auto opacity-30">
+                <div class="w-20 h-20 bg-gray-800 rounded-3xl flex items-center justify-center text-4xl shadow-inner border border-gray-700">
+                    <i class="fas fa-brain text-blue-500"></i>
                 </div>
-                <div class="text-center">
-                    <h3 class="text-2xl font-medium mb-2 text-gray-100">Comment puis-je vous aider ?</h3>
-                    <p class="text-sm">Votre assistant intelligent est prêt pour vos recherches complexes.</p>
-                </div>
+                <div class="text-center"><h3 class="text-2xl font-bold text-gray-100">Prêt pour l'analyse</h3></div>
             </div>
             
-            <div id="output" class="max-w-3xl mx-auto space-y-8">
-                </div>
+            <div id="output" class="max-w-4xl mx-auto"></div>
         </div>
 
-        <div class="p-4 md:p-6 bg-gradient-to-t from-[#0b0e14] via-[#0b0e14] to-transparent">
-            <div class="max-w-3xl mx-auto relative group">
-                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500">
-                    <i class="fas fa-terminal text-sm"></i>
-                </div>
+        <div class="p-6 bg-gradient-to-t from-[#0b0e14] via-[#0b0e14] to-transparent">
+            <div class="max-w-3xl mx-auto relative">
                 <input type="text" id="userInput" 
-                    class="w-full bg-[#161b22] border border-gray-700 rounded-2xl py-4 pl-12 pr-16 focus:ring-2 focus:ring-blue-500/50 outline-none transition shadow-2xl placeholder-gray-600"
-                    placeholder="Posez votre question..."
-                    onkeypress="if(event.key === 'Enter') submitQuery()">
-                <button onclick="submitQuery()" id="sendBtn" 
-                    class="absolute right-3 top-2.5 p-3 text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all active:scale-90">
-                    <i class="fas fa-paper-plane"></i>
+                    class="w-full bg-[#161b22] border border-gray-700 rounded-2xl py-5 pl-6 pr-16 focus:ring-2 focus:ring-blue-500/30 outline-none transition shadow-2xl placeholder-gray-600 text-sm"
+                    placeholder="Qu'est-ce qu'on analyse aujourd'hui ?" onkeypress="if(event.key === 'Enter') submitQuery()">
+                <button onclick="submitQuery()" class="absolute right-4 top-3 p-3 text-blue-500 hover:text-blue-400 active:scale-90 transition">
+                    <i class="fas fa-paper-plane text-lg"></i>
                 </button>
             </div>
-            <p class="text-center text-[10px] text-gray-600 mt-3 italic">
-                Rapports générés par IA. Vérifiez les sources citées.
-            </p>
         </div>
     </main>
 
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('hidden');
-        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('hidden'); }
 
-        // --- NAVIGATION DANS L'HISTORIQUE ---
-        async function loadHistory(id) {
-            const output = document.getElementById('output');
-            const placeholder = document.getElementById('placeholder');
-            const viewport = document.getElementById('chat-viewport');
-
-            placeholder.style.display = 'none';
-            output.innerHTML = `<div class="flex justify-center p-20 animate-pulse text-blue-400"><i class="fas fa-circle-notch fa-spin text-3xl"></i></div>`;
-
-            try {
-                const response = await fetch(`/history/${id}/`);
-                const data = await response.json();
-
-                output.innerHTML = `
-                    <div class="fade-in space-y-6">
-                        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
-                            <div>
-                                <h2 class="text-lg font-bold text-blue-400">${data.query}</h2>
-                                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Archive du ${data.date}</p>
-                            </div>
-                            <button onclick="downloadMd('${data.query}', 'archive-body')" class="text-[10px] bg-gray-800 px-3 py-1.5 rounded hover:bg-gray-700 border border-gray-700 transition">
-                                <i class="fas fa-download mr-1"></i> Markdown
+        // --- Rendu du Rapport Pro ---
+        function createReportUI(query, report, date = "À l'instant") {
+            const aiId = 'report-' + Date.now();
+            return `
+                <div id="${aiId}" class="fade-in mb-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gray-800 pb-6">
+                        <div>
+                            <h1 class="text-2xl font-black text-white tracking-tight">${query}</h1>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mt-1 font-bold">Rapport d'Intelligence • ${date}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyToClipboard(this, '${aiId}-content')" class="btn-action">
+                                <i class="far fa-copy"></i> <span>Copier</span>
+                            </button>
+                            <button onclick="exportToPDF('${aiId}')" class="btn-action text-blue-400 border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10">
+                                <i class="far fa-file-pdf"></i> <span>PDF</span>
+                            </button>
+                            <button onclick="downloadMd('${query}', '${aiId}-content')" class="btn-action">
+                                <i class="fab fa-markdown"></i> <span>Markdown</span>
                             </button>
                         </div>
-                        <div id="archive-body" class="prose prose-invert max-w-none prose-blue">
-                            ${marked.parse(data.report)}
-                        </div>
                     </div>
-                `;
-                viewport.scrollTop = 0;
-            } catch (err) {
-                output.innerHTML = `<p class="text-red-400">Erreur lors du chargement de l'historique.</p>`;
-            }
+                    <div id="${aiId}-content" class="report-body prose prose-invert max-w-none">
+                        ${marked.parse(report)}
+                    </div>
+                </div>
+            `;
         }
 
-        // --- NOUVELLE RECHERCHE ---
+        // --- Actions ---
+        function copyToClipboard(btn, contentId) {
+            const text = document.getElementById(contentId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const span = btn.querySelector('span');
+                const icon = btn.querySelector('i');
+                btn.classList.add('copy-success');
+                span.innerText = "Copié !";
+                icon.className = "fas fa-check";
+                setTimeout(() => {
+                    btn.classList.remove('copy-success');
+                    span.innerText = "Copier";
+                    icon.className = "far fa-copy";
+                }, 2000);
+            });
+        }
+
+        function exportToPDF(containerId) {
+            const element = document.getElementById(containerId);
+            const opt = {
+                margin: 10,
+                filename: 'Rapport_IntelSearch.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, backgroundColor: '#0b0e14' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // --- Logique de Recherche ---
         async function submitQuery() {
             const input = document.getElementById('userInput');
-            const viewport = document.getElementById('chat-viewport');
-            const output = document.getElementById('output');
-            const placeholder = document.getElementById('placeholder');
             const query = input.value.trim();
-            
             if (!query) return;
 
-            placeholder.style.display = 'none';
-            const aiMsgId = 'ai-' + Date.now();
-
-            // Message utilisateur
-            output.innerHTML += `
-                <div class="flex flex-col items-end fade-in mb-8">
-                    <div class="bg-gray-800 p-4 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-md border border-gray-700">
-                        ${query}
-                    </div>
-                </div>
-            `;
+            document.getElementById('placeholder').style.display = 'none';
+            const output = document.getElementById('output');
             
+            // Afficher le loader
+            const loaderId = 'loader-' + Date.now();
+            output.innerHTML = `<div id="${loaderId}" class="flex items-center gap-4 p-8 animate-pulse">
+                <i class="fas fa-circle-notch fa-spin text-blue-500"></i>
+                <span class="text-sm text-gray-500 font-bold uppercase tracking-widest text-[10px]">Analyses en cours...</span>
+            </div>`;
             input.value = '';
-            viewport.scrollTo(0, viewport.scrollHeight);
-
-            // Loader AI
-            output.innerHTML += `
-                <div id="${aiMsgId}" class="flex flex-col items-start fade-in space-y-4 mb-8">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-[10px]">AI</div>
-                        <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">Recherche en cours...</span>
-                    </div>
-                    <div class="bg-[#161b22] p-6 rounded-2xl rounded-tl-none border border-gray-800 w-full shadow-2xl">
-                        <div class="animate-pulse space-y-3">
-                            <div class="h-2 bg-gray-700 rounded w-3/4"></div>
-                            <div class="h-2 bg-gray-700 rounded w-full"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            viewport.scrollTo(0, viewport.scrollHeight);
 
             const formData = new FormData();
             formData.append('query', query);
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
             try {
-                const response = await fetch("{% url 'process' %}", {
-                    method: "POST",
-                    body: formData
-                });
+                const response = await fetch("{% url 'process' %}", { method: "POST", body: formData });
                 const data = await response.json();
-
-                const aiContainer = document.getElementById(aiMsgId);
+                document.getElementById(loaderId).remove();
+                
                 if (data.report) {
-                    aiContainer.innerHTML = `
-                        <div class="flex items-center justify-between w-full mb-2">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-6 h-6 bg-emerald-600 rounded flex items-center justify-center text-[10px]"><i class="fas fa-check"></i></div>
-                                <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest tracking-tighter">Rapport Complet</span>
-                            </div>
-                            <button onclick="downloadMd('${query}', '${aiMsgId}-body')" class="text-[10px] bg-gray-800 px-3 py-1 rounded hover:bg-gray-700 border border-gray-700 transition">
-                                <i class="fas fa-download mr-1"></i> Markdown
-                            </button>
-                        </div>
-                        <div id="${aiMsgId}-body" class="bg-[#161b22] p-6 rounded-2xl rounded-tl-none border border-gray-800 w-full shadow-2xl prose prose-invert max-w-none prose-blue">
-                            ${marked.parse(data.report)}
-                        </div>
-                    `;
-                    // On rafraîchit la sidebar pour voir le nouvel historique
+                    output.innerHTML = createReportUI(query, data.report);
                     addToSidebar(data.id, query);
-                } else {
-                    aiContainer.innerHTML = `<div class="p-4 bg-red-900/20 text-red-400 rounded-lg border border-red-800">Erreur: ${data.error}</div>`;
                 }
             } catch (err) {
-                document.getElementById(aiMsgId).innerHTML = `<div class="p-4 bg-red-900/20 text-red-400 rounded-lg border border-red-800">Erreur de connexion.</div>`;
+                document.getElementById(loaderId).innerHTML = `<p class="text-red-400">Erreur de connexion.</p>`;
             }
-            viewport.scrollTo(0, viewport.scrollHeight);
+        }
+
+        async function loadHistory(id) {
+            const output = document.getElementById('output');
+            document.getElementById('placeholder').style.display = 'none';
+            output.innerHTML = `<div class="p-20 text-center"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i></div>`;
+
+            const response = await fetch(`/history/${id}/`);
+            const data = await response.json();
+            output.innerHTML = createReportUI(data.query, data.report, data.date);
+            document.getElementById('chat-viewport').scrollTop = 0;
         }
 
         function addToSidebar(id, title) {
             const list = document.getElementById('history-list');
             const btn = document.createElement('button');
             btn.onclick = () => loadHistory(id);
-            btn.className = "w-full text-left p-3 rounded-lg hover:bg-gray-800 transition text-xs truncate group flex items-center mb-1 fade-in";
-            btn.innerHTML = `<i class="far fa-comment-alt mr-3 text-gray-500"></i><span class="truncate flex-grow">${title}</span>`;
+            btn.className = "w-full text-left p-3 rounded-lg hover:bg-gray-800 transition text-xs truncate flex items-center mb-1 fade-in";
+            btn.innerHTML = `<i class="far fa-comment-alt mr-3 text-gray-500"></i><span class="truncate">${title}</span>`;
             list.prepend(btn);
-            
-            // On retire le message "Aucun historique" s'il existe
-            const emptyMsg = list.querySelector('p');
-            if(emptyMsg) emptyMsg.remove();
+            const empty = list.querySelector('p'); if(empty) empty.remove();
         }
 
-        function downloadMd(name, elementId) {
-            const content = document.getElementById(elementId).innerText;
+        function downloadMd(name, contentId) {
+            const content = document.getElementById(contentId).innerText;
             const blob = new Blob([content], {type: 'text/markdown'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
