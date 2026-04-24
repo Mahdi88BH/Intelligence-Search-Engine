@@ -8,4 +8,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('process/', views.process_query, name='process'),
     path('history/<int:history_id>/', views.get_history_detail, name='history_detail'),
+path('history/delete/<int:history_id>/', views.delete_history, name='delete_history'),
 ]
