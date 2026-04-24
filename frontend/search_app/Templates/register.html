@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Animation d'entrée identique au Login */
+        /* Animation d'entrée : Slide + Fade + Blur */
         .page-entrance {
             animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             opacity: 0;
@@ -26,7 +26,7 @@
             }
         }
 
-        /* Animation de sortie pour la transition */
+        /* Animation de sortie pour la transition fluide */
         .page-exit {
             animation: fadeOut 0.4s ease-in forwards;
         }
@@ -49,7 +49,7 @@
         }
 
         input:focus {
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); /* Lueur émeraude pour l'inscription */
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
             border-color: rgba(16, 185, 129, 0.5) !important;
         }
     </style>
@@ -59,6 +59,9 @@
     <div id="main-container" class="w-full max-w-md page-entrance">
         
         <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600/10 rounded-2xl mb-4 border border-blue-500/20">
+                <i class="fas fa-brain text-blue-500 text-3xl"></i>
+            </div>
             <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent italic">IntelSearch AI</h1>
             <p class="text-gray-500 text-sm mt-2">Rejoignez l'intelligence de recherche</p>
         </div>
@@ -83,10 +86,6 @@
                                placeholder="Entrez votre {{ field.label|lower }}..."
                                class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 px-4 focus:ring-0 outline-none transition-all text-sm text-white placeholder-gray-700">
                     </div>
-                    
-                    {% if field.help_text %}
-                        <p class="text-[9px] text-gray-600 px-1">{{ field.help_text }}</p>
-                    {% endif %}
                 </div>
                 {% endfor %}
 
