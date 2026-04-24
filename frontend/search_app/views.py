@@ -81,7 +81,15 @@ def login_view(request):
     else:
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
+@login_required(login_url='login')
 
+def delete_history(request, history_id):
+    if request.method == "POST":
+        # On s'assure que l'entrée appartient bien à l'utilisateur connecté
+        item = get_object_or_404(SearchHistory, id=history_id, user=request.user)
+        item.delete()
+        return JsonResponse({"status": "success"})
+    return JsonResponse({"error": "Invalid request"}, status=400)
 def logout_view(request):
     logout(request)
     return redirect('login')
