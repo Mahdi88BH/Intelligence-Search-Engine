@@ -1,15 +1,18 @@
 import requests
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from .models import SearchHistory  # Import du modèle pour l'historique
 
 # --- VUES DE RECHERCHE ---
 
-@login_required(login_url='login')  # Seuls les connectés peuvent voir l'index
+@login_required(login_url='login')
 def index(request):
-    return render(request, 'index.html')
+    # On récupère tout l'historique de l'utilisateur connecté
+    history = SearchHistory.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'index.html', {'history': history})
 
 @login_required(login_url='login')
 def process_query(request):
@@ -17,15 +20,43 @@ def process_query(request):
         query = request.POST.get('query')
       
         try:
-            # Appel au backend FastAPI sur le port 8000
+            # 1. Appel au backend FastAPI (Port 8000)
             response = requests.post(
                 "http://127.0.0.1:8000/api/process", 
                 json={"query": query},
                 timeout=120  
             )
-            return JsonResponse(response.json())
+            data = response.json()
+
+            if "report" in data:
+                # 2. Sauvegarde automatique dans la base de données Django
+                history_entry = SearchHistory.objects.create(
+                    user=request.user,
+                    query=query,
+                    report=data["report"]
+                )
+                
+                # On renvoie le rapport ET l'ID de la sauvegarde pour mettre à jour la sidebar en JS
+                return JsonResponse({
+                    "report": data["report"], 
+                    "id": history_entry.id,
+                    "query": query
+                })
+            
+            return JsonResponse(data)
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+@login_required(login_url='login')
+def get_history_detail(request, history_id):
+    """Récupère un ancien rapport sans solliciter le backend FastAPI"""
+    item = get_object_or_404(SearchHistory, id=history_id, user=request.user)
+    return JsonResponse({
+        "query": item.query,
+        "report": item.report,
+        "date": item.created_at.strftime("%d/%m/%Y %H:%M")
+    })
 
 # --- VUES D'AUTHENTIFICATION ---
 
@@ -34,7 +65,7 @@ def register_view(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user) # Connecte l'utilisateur après inscription
+            login(request, user)
             return redirect('index')
     else:
         form = UserCreationForm()
