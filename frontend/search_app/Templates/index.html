@@ -2,50 +2,159 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>IntelSearch Interface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelSearch AI | Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Custom Scrollbar similar to ChatGPT */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        pre { background: #0d1117; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; }
+        code { color: #e5e7eb; font-family: 'Fira Code', monospace; font-size: 0.9em; }
+    </style>
 </head>
-<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen">
+<body class="bg-[#0b0e14] text-gray-200 font-sans h-screen flex overflow-hidden">
 
-    <div class="max-w-4xl mx-auto p-6 flex flex-col h-screen">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-blue-500">IntelSearch AI</h1>
-            <span class="px-3 py-1 bg-green-900/30 text-green-400 text-xs rounded-full border border-green-800">Serveur Actif</span>
-        </div>
-
-        <div id="report-container" class="flex-grow overflow-y-auto bg-[#161b22] rounded-2xl p-6 border border-gray-800 shadow-2xl mb-6">
-            <div id="placeholder" class="h-full flex flex-col items-center justify-center text-gray-600 italic">
-                <i class="fas fa-terminal text-4xl mb-4"></i>
-                En attente d'une requête...
-            </div>
-            <div id="output" class="prose prose-invert max-w-none prose-blue"></div>
-        </div>
-
-        <div class="relative group">
-            <input type="text" id="userInput" 
-                class="w-full bg-[#161b22] border border-gray-700 rounded-xl py-4 px-6 pr-16 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                placeholder="Entrez votre sujet de recherche...">
-            <button onclick="submitQuery()" class="absolute right-3 top-2.5 p-2 text-blue-500 hover:scale-110 transition">
-                <i class="fas fa-paper-plane text-xl"></i>
+    <aside id="sidebar" class="w-64 bg-[#161b22] border-r border-gray-800 flex flex-col transition-all duration-300 hidden md:flex">
+        <div class="p-4">
+            <button onclick="location.reload()" class="w-full flex items-center justify-between border border-gray-700 rounded-lg p-3 hover:bg-gray-800 transition text-sm">
+                <span><i class="fas fa-plus mr-2"></i> Nouvelle recherche</span>
+                <i class="fas fa-edit text-gray-500 text-xs"></i>
             </button>
         </div>
-    </div>
+
+        <div class="flex-grow overflow-y-auto px-2 space-y-1">
+            <div class="text-[10px] uppercase font-bold text-gray-500 px-3 mt-4 mb-2">Historique</div>
+            <div id="history-list">
+                <button class="w-full text-left p-3 rounded-lg hover:bg-gray-800 transition text-xs truncate group flex items-center">
+                    <i class="far fa-comment-alt mr-3 text-gray-500"></i>
+                    <span class="truncate flex-grow">Analyse Bitcoin 2026</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-gray-800">
+            <div class="flex items-center space-x-3 mb-4 px-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
+                    {{ user.username|first|upper }}
+                </div>
+                <span class="text-sm font-medium">{{ user.username }}</span>
+            </div>
+            <a href="{% url 'logout' %}" class="flex items-center p-2 text-sm text-red-400 hover:bg-red-900/20 rounded-lg transition">
+                <i class="fas fa-sign-out-alt mr-3"></i> Déconnexion
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-grow flex flex-col relative h-full">
+        
+        <header class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#0b0e14]/80 backdrop-blur-md sticky top-0 z-10">
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h2 class="text-lg font-semibold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent italic">IntelSearch AI</h2>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span id="status-dot" class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="text-[10px] uppercase tracking-widest text-gray-500">FastAPI Connecté</span>
+            </div>
+        </header>
+
+        <div id="chat-viewport" class="flex-grow overflow-y-auto p-4 md:p-8 scroll-smooth">
+            <div id="placeholder" class="h-full flex flex-col items-center justify-center space-y-6 max-w-2xl mx-auto opacity-40">
+                <div class="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center text-3xl">
+                    <i class="fas fa-robot text-blue-500"></i>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-2xl font-medium mb-2 text-gray-100">Comment puis-je vous aider ?</h3>
+                    <p class="text-sm">Posez une question complexe, l'IA cherchera pour vous via Groq.</p>
+                </div>
+            </div>
+            
+            <div id="output" class="max-w-3xl mx-auto space-y-8">
+                </div>
+        </div>
+
+        <div class="p-4 md:p-6 bg-gradient-to-t from-[#0b0e14] via-[#0b0e14] to-transparent">
+            <div class="max-w-3xl mx-auto relative group">
+                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500">
+                    <i class="fas fa-terminal text-sm"></i>
+                </div>
+                <input type="text" id="userInput" 
+                    class="w-full bg-[#161b22] border border-gray-700 rounded-2xl py-4 pl-12 pr-16 focus:ring-2 focus:ring-blue-500/50 outline-none transition shadow-2xl placeholder-gray-600"
+                    placeholder="Tapez votre requête ici..."
+                    onkeypress="if(event.key === 'Enter') submitQuery()">
+                <button onclick="submitQuery()" id="sendBtn" 
+                    class="absolute right-3 top-2.5 p-3 text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all active:scale-90">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <p class="text-center text-[10px] text-gray-600 mt-3 italic">
+                IntelSearch peut faire des erreurs. Vérifiez les informations importantes.
+            </p>
+        </div>
+    </main>
 
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+
         async function submitQuery() {
-            const query = document.getElementById('userInput').value;
+            const input = document.getElementById('userInput');
+            const viewport = document.getElementById('chat-viewport');
             const output = document.getElementById('output');
             const placeholder = document.getElementById('placeholder');
+            const query = input.value.trim();
             
             if (!query) return;
 
-            // UI Loading
+            // UI Adjustments
             placeholder.style.display = 'none';
-            output.innerHTML = `<div class="animate-pulse text-blue-400"><i class="fas fa-sync-alt animate-spin mr-2"></i> L'agent recherche et analyse les sources via Groq...</div>`;
+            const userMsgId = 'user-' + Date.now();
+            const aiMsgId = 'ai-' + Date.now();
 
-            // Appel à la vue Django (qui fera le pont vers FastAPI)
+            // 1. Add User Question to Chat
+            output.innerHTML += `
+                <div class="flex flex-col items-end fade-in">
+                    <div class="bg-gray-800 p-4 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-md border border-gray-700">
+                        ${query}
+                    </div>
+                </div>
+            `;
+            
+            input.value = '';
+            viewport.scrollTo(0, viewport.scrollHeight);
+
+            // 2. Add AI Loading State
+            output.innerHTML += `
+                <div id="${aiMsgId}" class="flex flex-col items-start fade-in space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-[10px]">AI</div>
+                        <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">Génération du rapport...</span>
+                    </div>
+                    <div class="bg-[#161b22] p-6 rounded-2xl rounded-tl-none border border-gray-800 w-full shadow-2xl">
+                        <div class="animate-pulse space-y-3">
+                            <div class="h-2 bg-gray-700 rounded w-3/4"></div>
+                            <div class="h-2 bg-gray-700 rounded w-full"></div>
+                            <div class="h-2 bg-gray-700 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            viewport.scrollTo(0, viewport.scrollHeight);
+
+            // 3. Backend Call
             const formData = new FormData();
             formData.append('query', query);
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
@@ -57,27 +166,47 @@
                 });
                 const data = await response.json();
 
+                const aiContainer = document.getElementById(aiMsgId);
                 if (data.report) {
-                    output.innerHTML = `
-                        <div class="flex justify-end gap-2 mb-4 border-b border-gray-800 pb-2">
-                            <button onclick="downloadMd('${query}')" class="text-xs bg-gray-800 px-2 py-1 rounded hover:bg-gray-700">.MD</button>
+                    aiContainer.innerHTML = `
+                        <div class="flex items-center justify-between w-full">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-6 h-6 bg-emerald-600 rounded flex items-center justify-center text-[10px]"><i class="fas fa-check text-[8px]"></i></div>
+                                <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Rapport Final</span>
+                            </div>
+                            <button onclick="downloadMd('${query}', '${aiMsgId}-body')" class="text-[10px] bg-gray-800 px-3 py-1 rounded hover:bg-gray-700 border border-gray-700 transition">
+                                <i class="fas fa-download mr-1"></i> Markdown
+                            </button>
                         </div>
-                        ${marked.parse(data.report)}
+                        <div id="${aiMsgId}-body" class="bg-[#161b22] p-6 rounded-2xl rounded-tl-none border border-gray-800 w-full shadow-2xl prose prose-invert max-w-none prose-blue">
+                            ${marked.parse(data.report)}
+                        </div>
                     `;
+                    // Ajouter à l'historique visuel
+                    addToHistory(query);
                 } else {
-                    output.innerHTML = `<div class="text-red-400 italic">Erreur: ${data.error}</div>`;
+                    aiContainer.innerHTML = `<div class="p-4 bg-red-900/20 text-red-400 rounded-lg border border-red-800 text-xs">Erreur: ${data.error}</div>`;
                 }
             } catch (err) {
-                output.innerHTML = `<div class="text-red-400 italic">Erreur de connexion : ${err}</div>`;
+                document.getElementById(aiMsgId).innerHTML = `<div class="p-4 bg-red-900/20 text-red-400 rounded-lg border border-red-800 text-xs italic">Erreur de connexion : ${err}</div>`;
             }
+            viewport.scrollTo(0, viewport.scrollHeight);
         }
 
-        function downloadMd(name) {
-            const content = document.getElementById('output').innerText;
+        function addToHistory(title) {
+            const list = document.getElementById('history-list');
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left p-3 rounded-lg hover:bg-gray-800 transition text-xs truncate group flex items-center fade-in";
+            btn.innerHTML = `<i class="far fa-comment-alt mr-3 text-gray-500"></i><span class="truncate flex-grow">${title}</span>`;
+            list.prepend(btn);
+        }
+
+        function downloadMd(name, elementId) {
+            const content = document.getElementById(elementId).innerText;
             const blob = new Blob([content], {type: 'text/markdown'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `rapport_${name.replace(/\s+/g, '_')}.md`;
+            a.download = `rapport_${name.substring(0,20).replace(/\s+/g, '_')}.md`;
             a.click();
         }
     </script>
