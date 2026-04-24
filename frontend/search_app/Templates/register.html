@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelSearch AI | Inscription</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-md fade-in">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent italic">IntelSearch AI</h1>
+            <p class="text-gray-500 text-sm mt-2">Rejoignez l'intelligence de recherche</p>
+        </div>
+
+        <div class="bg-[#161b22] border border-gray-800 rounded-3xl p-8 shadow-2xl">
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500">{{ field.label }}</label>
+                    {{ field.errors }}
+                    <div class="relative">
+                        <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                               name="{{ field.name }}" 
+                               class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500/50 outline-none transition text-sm">
+                    </div>
+                </div>
+                {% endfor %}
+
+                <button type="submit" 
+                    class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all mt-4 shadow-lg shadow-emerald-900/20">
+                    S'inscrire
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center mt-8 text-sm text-gray-500">
+            Déjà inscrit ? 
+            <a href="{% url 'login' %}" class="text-blue-400 hover:underline font-medium">Se connecter</a>
+        </p>
+    </div>
+
+    <style>
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Style simple pour les erreurs de formulaire Django */
+        .errorlist { color: #f87171; font-size: 11px; margin-bottom: 5px; list-style: none; padding: 0; }
+    </style>
+</body>
+</html>
