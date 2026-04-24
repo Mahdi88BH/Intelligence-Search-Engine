@@ -6,10 +6,58 @@
     <title>IntelSearch AI | Inscription</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen flex items-center justify-center p-6">
+    <style>
+        /* Animation d'entrée identique au Login */
+        .page-entrance {
+            animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
 
-    <div class="w-full max-w-md fade-in">
+        @keyframes slideUpFade {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+                filter: blur(10px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+                filter: blur(0); 
+            }
+        }
+
+        /* Animation de sortie pour la transition */
+        .page-exit {
+            animation: fadeOut 0.4s ease-in forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); filter: blur(5px); }
+        }
+
+        /* Style des erreurs Django */
+        .errorlist { 
+            color: #f87171; 
+            font-size: 11px; 
+            margin-bottom: 8px; 
+            list-style: none; 
+            padding: 10px;
+            background: rgba(248, 113, 113, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        input:focus {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); /* Lueur émeraude pour l'inscription */
+            border-color: rgba(16, 185, 129, 0.5) !important;
+        }
+    </style>
+</head>
+<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen flex items-center justify-center p-6 overflow-hidden">
+
+    <div id="main-container" class="w-full max-w-md page-entrance">
+        
         <div class="text-center mb-10">
             <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent italic">IntelSearch AI</h1>
             <p class="text-gray-500 text-sm mt-2">Rejoignez l'intelligence de recherche</p>
@@ -21,34 +69,57 @@
                 
                 {% for field in form %}
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500">{{ field.label }}</label>
-                    {{ field.errors }}
-                    <div class="relative">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">
+                        {{ field.label }}
+                    </label>
+                    
+                    {% if field.errors %}
+                        {{ field.errors }}
+                    {% endif %}
+                    
+                    <div class="relative group">
                         <input type="{{ field.field.widget.input_type|default:'text' }}" 
                                name="{{ field.name }}" 
-                               class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500/50 outline-none transition text-sm">
+                               placeholder="Entrez votre {{ field.label|lower }}..."
+                               class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 px-4 focus:ring-0 outline-none transition-all text-sm text-white placeholder-gray-700">
                     </div>
+                    
+                    {% if field.help_text %}
+                        <p class="text-[9px] text-gray-600 px-1">{{ field.help_text }}</p>
+                    {% endif %}
                 </div>
                 {% endfor %}
 
                 <button type="submit" 
-                    class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all mt-4 shadow-lg shadow-emerald-900/20">
-                    S'inscrire
+                    class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] mt-6 shadow-lg shadow-emerald-900/20">
+                    Créer mon compte
                 </button>
             </form>
         </div>
 
         <p class="text-center mt-8 text-sm text-gray-500">
             Déjà inscrit ? 
-            <a href="{% url 'login' %}" class="text-blue-400 hover:underline font-medium">Se connecter</a>
+            <a href="{% url 'login' %}" 
+               onclick="transitionToPage(event, '{% url 'login' %}')"
+               class="text-blue-400 hover:text-blue-300 font-medium transition-colors cursor-pointer">
+               Se connecter
+            </a>
         </p>
     </div>
 
-    <style>
-        .fade-in { animation: fadeIn 0.8s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        /* Style simple pour les erreurs de formulaire Django */
-        .errorlist { color: #f87171; font-size: 11px; margin-bottom: 5px; list-style: none; padding: 0; }
-    </style>
+    <script>
+        /**
+         * Gère la transition fluide vers le login
+         */
+        function transitionToPage(e, url) {
+            e.preventDefault();
+            const container = document.getElementById('main-container');
+            container.classList.add('page-exit');
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, 380);
+        }
+    </script>
 </body>
 </html>
