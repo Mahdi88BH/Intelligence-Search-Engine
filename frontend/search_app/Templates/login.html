@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelSearch AI | Connexion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-[#0b0e14] text-gray-200 font-sans min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-md fade-in">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600/10 rounded-2xl mb-4 border border-blue-500/20">
+                <i class="fas fa-brain text-blue-500 text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent italic">IntelSearch AI</h1>
+            <p class="text-gray-500 text-sm mt-2">Connectez-vous pour accéder à votre espace</p>
+        </div>
+
+        <div class="bg-[#161b22] border border-gray-800 rounded-3xl p-8 shadow-2xl">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Utilisateur</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-4 flex items-center text-gray-500">
+                            <i class="fas fa-user text-xs"></i>
+                        </span>
+                        <input type="text" name="username" required
+                            class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-blue-500/50 outline-none transition text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Mot de passe</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-4 flex items-center text-gray-500">
+                            <i class="fas fa-lock text-xs"></i>
+                        </span>
+                        <input type="password" name="password" required
+                            class="w-full bg-[#0d1117] border border-gray-700 rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-blue-500/50 outline-none transition text-sm">
+                    </div>
+                </div>
+
+                <button type="submit" 
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-900/20">
+                    Se connecter
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center mt-8 text-sm text-gray-500">
+            Nouveau ici ? 
+            <a href="{% url 'register' %}" class="text-blue-400 hover:underline font-medium">Créer un compte</a>
+        </p>
+    </div>
+
+    <style>
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</body>
+</html>
