@@ -1,26 +1,23 @@
-from agents.base import BaseAgent
-from prompts.prompt_manager import PromptManager
+class SummarizeAgent:
 
+    def __init__(self, llm_service, prompt_service):
+        self.llm = llm_service.get("fast")
+        self.prompts = prompt_service
 
-class SummarizeAgent(BaseAgent):
-
-    def __init__(self):
-        self.pm = PromptManager()
-        self.llm = self.pm.get_llm()
-
-    def run(self, state: dict):
+    def run(self, state):
         summaries = {}
 
-        for query, contents in state["contents"].items():
-            summaries[query] = []
+        for q, contents in state.contents.items():
+            summaries[q] = []
 
-            for content in contents:
-                prompt = self.pm.get_prompt(
-                    "summarization",
-                    content=content
-                )
+            for c in contents:
+                prompt = self.prompts.get("summarize", content=c)
 
-                summary = self.llm.invoke(prompt).content
-                summaries[query].append(summary)
+                try:
+                    summary = self.llm.invoke(prompt).content
+                except:
+                    summary = "Error"
+
+                summaries[q].append(summary)
 
         return {"summaries": summaries}

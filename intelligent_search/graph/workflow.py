@@ -1,44 +1,41 @@
 from langgraph.graph import StateGraph, END
-from graph.state import GraphState
-
+from core.state import GraphState
 from agents.search_agent import SearchAgent
 from agents.summarize_agent import SummarizeAgent
 from agents.report_agent import ReportAgent
 
-from tools.search_tool import SearchTool
-from tools.scraper_tool import ScraperTool
-
 
 class Workflow:
 
-    def __init__(self):
-        self.search_agent = SearchAgent()
-        self.summarize_agent = SummarizeAgent()
-        self.report_agent = ReportAgent()
+    def __init__(self, container):
+        self.c = container
 
-        self.search_tool = SearchTool()
-        self.scraper_tool = ScraperTool()
-
-    def fetch_urls(self, state: dict):
-        urls = {}
-        for q in state["enhanced_queries"]:
-            urls[q] = self.search_tool.run(q)
+    def fetch_urls(self, state):
+        urls = {
+            q: self.c.search_tool.run(q)
+            for q in state.enhanced_queries
+        }
         return {"urls": urls}
 
-    def scrape(self, state: dict):
-        contents = {}
-        for q, urls in state["urls"].items():
-            contents[q] = [self.scraper_tool.run(url) for url in urls]
+    def scrape(self, state):
+        contents = {
+            q: [self.c.scraper_tool.run(u) for u in urls]
+            for q, urls in state.urls.items()
+        }
         return {"contents": contents}
 
     def build(self):
         graph = StateGraph(GraphState)
 
-        graph.add_node("enhance", self.search_agent.run)
+        search_agent = SearchAgent(self.c.llm_service, self.c.prompt_service)
+        summarize_agent = SummarizeAgent(self.c.llm_service, self.c.prompt_service)
+        report_agent = ReportAgent(self.c.llm_service, self.c.prompt_service)
+
+        graph.add_node("enhance", search_agent.run)
         graph.add_node("search", self.fetch_urls)
         graph.add_node("scrape", self.scrape)
-        graph.add_node("summarize", self.summarize_agent.run)
-        graph.add_node("report", self.report_agent.run)
+        graph.add_node("summarize", summarize_agent.run)
+        graph.add_node("report", report_agent.run)
 
         graph.set_entry_point("enhance")
 
