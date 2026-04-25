@@ -17,7 +17,6 @@ app.add_middleware(
 )
 
 # On construit l'application LangGraph une seule fois au démarrage
-# Exactement comme tu le faisais dans main.py
 search_engine = Workflow().build()
 
 class SearchRequest(BaseModel):
